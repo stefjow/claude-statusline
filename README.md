@@ -3,10 +3,10 @@
 A two-row status line for [Claude Code](https://claude.com/claude-code): context
 fill, plan usage windows, and prompt-cache health, as painted gauge bars.
 
-```
-Opus 5 (1M context) ∗ high ∗ my-project main ∗ 241k tok ∗ CACHE(-40m) ███94%██
-CONTEXT  24%   ∗ 5H(-1h)  15%   ∗ WK(-4d)  18%   ∗ FABLE(-5d)  14%
-```
+![Two rows beneath the Claude Code prompt. Row one: Opus 5 (1M context), effort
+high, directory and branch, 264k tok, and a violet CACHE gauge reading 98% with
+a (-59m) countdown. Row two: cyan CONTEXT 26%, magenta 5H 21% (-1h), green WK
+19% (-5d), gold FABLE 14% (-5d).](docs/statusline.png)
 
 Each gauge is a solid rectangle: the filled part is the metric's own colour with
 the percentage in black on top, the rest is a grey trough with the percentage in
