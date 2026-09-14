@@ -76,7 +76,7 @@ echo "  patched $SETTINGS (backup: settings.json.bak-$STAMP)"
 now=$(date +%s)
 echo
 echo "preview:"
-printf '{"model":{"display_name":"Opus 5"},"effort":{"level":"high"},"workspace":{"current_dir":"%s"},"context_window":{"used_percentage":24,"total_input_tokens":241000},"prompt_cache":{"caching_observed":true,"warm":true,"hit_ratio":0.94,"expires_at":%s},"rate_limits":{"five_hour":{"used_percentage":15,"resets_at":%s},"seven_day":{"used_percentage":74,"resets_at":%s}}}' \
+printf '{"session_id":"1f0e9c7a-4b2d-4f19-9c3e-6a58d0b7e412","model":{"display_name":"Opus 5"},"effort":{"level":"high"},"workspace":{"current_dir":"%s"},"context_window":{"used_percentage":24},"prompt_cache":{"caching_observed":true,"warm":true,"hit_ratio":0.94,"expires_at":%s},"rate_limits":{"five_hour":{"used_percentage":15,"resets_at":%s},"seven_day":{"used_percentage":74,"resets_at":%s}}}' \
   "$PWD" "$(( now + 2400 ))" "$(( now + 3600 ))" "$(( now + 430000 ))" \
   | bash "$CLAUDE_DIR/statusline.sh"
 echo

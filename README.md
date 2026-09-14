@@ -15,10 +15,12 @@ grows past it.
 
 ## What the fields mean
 
-**Row 1** — model · reasoning effort · directory and branch · tokens in the
-context window · prompt-cache gauge.
+**Row 1** — `MODEL:` · `EFFORT:` · `DIR:` · `BRANCH:` · `SESSION:`. Every field
+carries a grey label, so a value is readable on its own without counting
+separators. `SESSION:` prints the full session id — the one `claude --resume`
+takes, and the one that names the transcript file.
 
-**Row 2** — one gauge per usage window.
+**Row 2** — one gauge per usage window, prompt-cache health last.
 
 | Gauge | Shows | Countdown |
 |---|---|---|
@@ -109,8 +111,9 @@ Environment variables, all optional:
 | `CLAUDE_USAGE_TTL` | `180` | Seconds between usage-endpoint refreshes |
 | `CLAUDE_USAGE_MAX_AGE` | `900` | Hide cached windows older than this |
 
-The default row widths are 79 and 76 columns. Drop `CLAUDE_STATUSLINE_BAR_CELLS`
-to `6` if you run a narrower terminal.
+The default row widths are 109 and 101 columns, of which the session id alone
+is 36. Drop `CLAUDE_STATUSLINE_BAR_CELLS` to `6` if you run a narrower
+terminal.
 
 ## Docs
 

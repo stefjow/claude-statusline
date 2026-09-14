@@ -39,10 +39,10 @@ echo "installing status line into $CLAUDE_DIR"
 write statusline.sh <<'STATUSLINE_PART_EOF'
 #!/usr/bin/env bash
 # Claude Code status line, two rows:
-#   row 1: model · effort · dir branch
+#   row 1: model · effort · dir branch · session id
 #   row 2: gauge bars (percentage printed inside the bar) for context,
-#          5h / weekly plan windows, and per-model
-#          weekly windows (Fable, ...)
+#          5h / weekly plan windows, per-model weekly windows (Fable, ...)
+#          and prompt-cache health
 # Receives the statusline JSON on stdin (see "statusLine" in settings.json).
 set -uo pipefail
 export LC_ALL=C
@@ -164,14 +164,6 @@ gauge() {
   printf '%s%s%s%s %s%s' $'\033['"${fg}m" "$label" "$RESET" "$left" "$(bar "$pct" "$bg" "$fg")" "$mark"
 }
 
-# 137000 -> 137k, 1240000 -> 1.2M
-fmt_tokens() {
-  local t=$1
-  if   [ "$t" -ge 1000000 ]; then printf '%d.%dM' $(( t / 1000000 )) $(( (t % 1000000) / 100000 ))
-  elif [ "$t" -ge 1000 ];    then printf '%dk' $(( t / 1000 ))
-  else printf '%d' "$t"; fi
-}
-
 join() { # join "$@" with a separator
   local sep=$1 out="" p; shift
   for p in "$@"; do
@@ -185,38 +177,21 @@ join() { # join "$@" with a separator
 # ---------- row 1: who and where ----------
 row1=()
 model=$(j '.model.display_name')
-case $model in ''|null) ;; *) row1+=("${CYAN}${model}${RESET}");; esac
+case $model in ''|null) ;; *) row1+=("${GREY}MODEL:${RESET}${CYAN}${model}${RESET}");; esac
 
 effort=$(j '.effort.level // empty')
-[ -n "$effort" ] && row1+=("${LIGHT}${effort}${RESET}")
+[ -n "$effort" ] && row1+=("${GREY}EFFORT:${RESET}${LIGHT}${effort}${RESET}")
 
 cwd=$(j '.workspace.current_dir')
 case $cwd in ''|null) ;; *)
-  loc=$(basename "$cwd")
+  row1+=("${GREY}DIR:${RESET}$(basename "$cwd")")
   branch=$(git -C "$cwd" branch --show-current 2>/dev/null)
-  [ -n "$branch" ] && loc="$loc ${LIGHT}${branch}${RESET}"
-  row1+=("$loc");;
+  [ -n "$branch" ] && row1+=("${GREY}BRANCH:${RESET}${LIGHT}${branch}${RESET}");;
 esac
 
-# tokens currently in the context window
-toks=$(j '.context_window.total_input_tokens // empty')
-if [ -n "$toks" ] && [ "$toks" -gt 0 ] 2>/dev/null; then
-  row1+=("${LIGHT}$(fmt_tokens "$toks")${RESET}${GREY} tok${RESET}")
-fi
-
-# prompt-cache health: hit ratio as the gauge, time until the prefix goes cold
-# as the countdown. Only shown where the provider actually reports cache tokens.
-if [ "$(j '.prompt_cache.caching_observed')" = "true" ]; then
-  hit=$(j '.prompt_cache.hit_ratio | if . == null then empty else (. * 100 | round) end')
-  if [ -n "$hit" ]; then
-    if [ "$(j '.prompt_cache.warm')" = "true" ]; then
-      note=$(j '.prompt_cache.expires_at // empty')
-    else
-      note="cold"
-    fi
-    row1+=("$(gauge cache "$hit" "$note" inverse)")
-  fi
-fi
+# session id, for --resume and for finding the transcript again
+sid=$(j '.session_id // empty')
+case $sid in ''|null) ;; *) row1+=("${GREY}SESSION:${RESET}${CYAN}${sid}${RESET}");; esac
 
 # ---------- row 2: the gauges ----------
 row2=()
@@ -243,6 +218,20 @@ if [ -f "$CACHE" ] && [ "$(cache_age)" -lt "$CACHE_MAX_AGE" ]; then
                   | select(.kind == "weekly_scoped" and .scope.model.display_name != null)
                   | [.scope.model.display_name, (.percent // 0 | round), (.resets_at // "")]
                   | @tsv' "$CACHE" 2>/dev/null)
+fi
+
+# prompt-cache health: hit ratio as the gauge, time until the prefix goes cold
+# as the countdown. Only shown where the provider actually reports cache tokens.
+if [ "$(j '.prompt_cache.caching_observed')" = "true" ]; then
+  hit=$(j '.prompt_cache.hit_ratio | if . == null then empty else (. * 100 | round) end')
+  if [ -n "$hit" ]; then
+    if [ "$(j '.prompt_cache.warm')" = "true" ]; then
+      note=$(j '.prompt_cache.expires_at // empty')
+    else
+      note="cold"
+    fi
+    row2+=("$(gauge cache "$hit" "$note" inverse)")
+  fi
 fi
 
 # ---------- emit ----------
@@ -324,7 +313,7 @@ echo "  patched $SETTINGS (backup: settings.json.bak-$STAMP)"
 now=$(date +%s)
 echo
 echo "preview:"
-printf '{"model":{"display_name":"Opus 5"},"effort":{"level":"high"},"workspace":{"current_dir":"%s"},"context_window":{"used_percentage":24,"total_input_tokens":241000},"prompt_cache":{"caching_observed":true,"warm":true,"hit_ratio":0.94,"expires_at":%s},"rate_limits":{"five_hour":{"used_percentage":15,"resets_at":%s},"seven_day":{"used_percentage":74,"resets_at":%s}}}' \
+printf '{"session_id":"1f0e9c7a-4b2d-4f19-9c3e-6a58d0b7e412","model":{"display_name":"Opus 5"},"effort":{"level":"high"},"workspace":{"current_dir":"%s"},"context_window":{"used_percentage":24},"prompt_cache":{"caching_observed":true,"warm":true,"hit_ratio":0.94,"expires_at":%s},"rate_limits":{"five_hour":{"used_percentage":15,"resets_at":%s},"seven_day":{"used_percentage":74,"resets_at":%s}}}' \
   "$PWD" "$(( now + 2400 ))" "$(( now + 3600 ))" "$(( now + 430000 ))" \
   | bash "$CLAUDE_DIR/statusline.sh"
 echo
