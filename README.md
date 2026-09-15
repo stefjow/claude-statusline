@@ -31,6 +31,9 @@ takes, and the one that names the transcript file.
 | `SPEND` | Gateway spend limit, if you're behind one | until the period resets |
 | `CACHE` | Prompt-cache **hit ratio** | until the cached prefix goes **cold** |
 
+Countdowns carry two units where the second one is non-zero: `45m`, `3h20m`,
+`1d4h`. A bare `1d` would leave up to 24 hours open.
+
 Two things about `CACHE` are deliberately inverted, because for a hit ratio high
 is healthy:
 
@@ -111,7 +114,7 @@ Environment variables, all optional:
 | `CLAUDE_USAGE_TTL` | `180` | Seconds between usage-endpoint refreshes |
 | `CLAUDE_USAGE_MAX_AGE` | `900` | Hide cached windows older than this |
 
-The default row widths are 109 and 101 columns, of which the session id alone
+The default row widths are 109 and 104 columns, of which the session id alone
 is 36. Drop `CLAUDE_STATUSLINE_BAR_CELLS` to `6` if you run a narrower
 terminal.
 

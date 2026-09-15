@@ -92,15 +92,24 @@ pct_color() {
   else printf '%s' "$GREEN"; fi
 }
 
-# compact "45m" / "3h" / "2d" until a unix timestamp
+# compact "45m" / "3h20m" / "1d4h" until a unix timestamp. Two units, because
+# a bare "1d" leaves up to 24 hours open; the smaller unit is dropped when zero.
 until_reset() {
-  local ts=$1 diff
+  local ts=$1 diff rest
   case $ts in ''|null) return;; esac
   diff=$(( ts - $(date +%s) ))
   [ "$diff" -le 0 ] && return
-  if   [ "$diff" -ge 86400 ]; then printf '%dd' $(( diff / 86400 ))
-  elif [ "$diff" -ge 3600 ];  then printf '%dh' $(( diff / 3600 ))
-  else printf '%dm' $(( diff / 60 )); fi
+  if [ "$diff" -ge 86400 ]; then
+    rest=$(( diff % 86400 / 3600 ))
+    if [ "$rest" -gt 0 ]; then printf '%dd%dh' $(( diff / 86400 )) "$rest"
+    else printf '%dd' $(( diff / 86400 )); fi
+  elif [ "$diff" -ge 3600 ]; then
+    rest=$(( diff % 3600 / 60 ))
+    if [ "$rest" -gt 0 ]; then printf '%dh%dm' $(( diff / 3600 )) "$rest"
+    else printf '%dh' $(( diff / 3600 )); fi
+  else
+    printf '%dm' $(( diff / 60 ))
+  fi
 }
 
 # Each metric owns a hue: the bar fill is that colour, digits on the fill are
