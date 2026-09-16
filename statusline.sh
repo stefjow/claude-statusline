@@ -205,10 +205,18 @@ if [ "$(j '.prompt_cache.caching_observed')" = "true" ]; then
 fi
 
 # ---------- emit ----------
+# Optional logo column to the left of both rows, drawn in box-drawing glyphs so
+# it needs no font beyond the one the gauges already assume. Off by default;
+# CLAUDE_STATUSLINE_LOGO=wifo draws the WIFO wordmark (W I F O, 8 cells wide).
+case ${CLAUDE_STATUSLINE_LOGO:-} in
+  wifo) logo1="${LIGHT}┃ ┃┳┏━┏┓${RESET} "; logo2="${LIGHT}┗┻┛┻┣ ┗┛${RESET} ";;
+  *)    logo1=""; logo2="";;
+esac
+
 line1=$(join "${RULE}" "${row1[@]-}")
 line2=$(join "${RULE}" "${row2[@]-}")
 if [ -n "$line1" ] && [ -n "$line2" ]; then
-  printf '%s\n%s' "$line1" "$line2"
+  printf '%s\n%s' "${logo1}${line1}" "${logo2}${line2}"
 else
-  printf '%s%s' "$line1" "$line2"
+  printf '%s%s' "$line1" "$line2"     # single row: no room for a two-row logo
 fi

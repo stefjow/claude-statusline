@@ -113,10 +113,22 @@ Environment variables, all optional:
 | `CLAUDE_STATUSLINE_RULE_COLOR` | `38;5;220` | Separator colour (ANSI SGR) |
 | `CLAUDE_USAGE_TTL` | `180` | Seconds between usage-endpoint refreshes |
 | `CLAUDE_USAGE_MAX_AGE` | `900` | Hide cached windows older than this |
+| `CLAUDE_STATUSLINE_LOGO` | unset | `wifo` draws a two-row wordmark left of both rows |
 
 The default row widths are 109 and 104 columns, of which the session id alone
 is 36. Drop `CLAUDE_STATUSLINE_BAR_CELLS` to `6` if you run a narrower
 terminal.
+
+`CLAUDE_STATUSLINE_LOGO=wifo` prepends a logo column to both rows, drawn from
+box-drawing glyphs so it needs no font the gauges don't already assume:
+
+```
+┃ ┃┳┏━┏┓ MODEL:… ∗ EFFORT:… ∗ DIR:… ∗ BRANCH:…
+┗┻┛┻┣ ┗┛ CONTEXT 37% ∗ 5H(-3h20m) 15% ∗ …
+```
+
+It costs 9 columns on both rows. Add your own house mark as another `case`
+branch next to `wifo` in the emit section.
 
 ## Docs
 
