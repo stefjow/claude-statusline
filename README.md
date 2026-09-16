@@ -60,6 +60,9 @@ less install.sh     # it reads your credentials file - see below
 bash install.sh
 ```
 
+`bash install.sh --logo` turns the logo column on (see Configuration);
+`--logo=NAME` picks another mark, and `--help` prints the usage.
+
 The installer writes `~/.claude/statusline.sh` and `~/.claude/usage-refresh.sh`,
 then adds a `statusLine` entry to `~/.claude/settings.json` with everything else
 preserved. Anything it overwrites is backed up with a `.bak-<timestamp>` suffix,
